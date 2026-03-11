@@ -1,0 +1,236 @@
+```html
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サンブレイク武器ルーレット</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  font-family:'Orbitron',sans-serif;
+  background:linear-gradient(#1b1b1b,#0c0c0c);
+  color:white;
+  text-align:center;
+  margin:0;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+
+h1{
+  color:#ff7a2f;
+  font-size:22px;
+  margin-bottom:20px;
+}
+
+#rouletteBox{
+  border:3px solid #ff7a2f;
+  border-radius:12px;
+  padding:25px;
+  margin:0 auto 20px auto;
+  max-width:260px;
+  background:#111;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+#result{
+  font-size:45px;
+}
+
+#type{
+  color:#ffd27f;
+}
+
+#desc{
+  margin-top:5px;
+}
+
+#luck{
+  color:#7fffcc;
+  margin-top:10px;
+}
+
+button{
+  width:90%;
+  max-width:320px;
+  padding:15px;
+  margin:10px auto;
+  font-size:20px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(#ff7a2f,#d84e00);
+  color:white;
+}
+
+button:disabled{
+  background:#555;
+}
+
+.box{
+  background:#161616;
+  border:2px solid #444;
+  border-radius:10px;
+  padding:15px;
+  margin:20px auto;
+  max-width:340px;
+}
+
+.title{
+  color:#ffb37a;
+  margin-bottom:10px;
+}
+
+#history{
+  text-align:left;
+  line-height:1.6;
+}
+
+#statsPercent{
+  text-align:left;
+  line-height:1.6;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>モンハン サンブレイク 武器ルーレット</h1>
+
+<div id="rouletteBox">
+  <div id="result">？？？</div>
+  <div id="type"></div>
+  <div id="desc"></div>
+  <div id="luck"></div>
+</div>
+
+<button id="spinBtn" onclick="spin()">ルーレットを回す</button>
+
+<div class="box">
+  <div class="title">クエストログ</div>
+  <button onclick="clearHistory()">履歴を消す</button>
+  <div id="history"></div>
+</div>
+
+<div class="box">
+  <div class="title">武器統計</div>
+  <canvas id="statsChart"></canvas>
+  <div id="statsPercent"></div>
+</div>
+
+<script>
+const weapons=[
+{name:"大剣",type:"近接武器",desc:"溜め斬りで超火力を叩き込む。"},
+{name:"太刀",type:"近接武器",desc:"見切りカウンターが魅力。"},
+{name:"片手剣",type:"近接武器",desc:"機動力の高い万能武器。"},
+{name:"双剣",type:"近接武器",desc:"手数で攻める高速武器。"},
+{name:"ハンマー",type:"近接武器",desc:"頭を狙ってスタン。"},
+{name:"狩猟笛",type:"近接武器",desc:"旋律で強化。"},
+{name:"ランス",type:"近接武器",desc:"鉄壁ガード。"},
+{name:"ガンランス",type:"近接武器",desc:"砲撃で爆発。"},
+{name:"スラッシュアックス",type:"近接武器",desc:"変形武器。"},
+{name:"チャージアックス",type:"近接武器",desc:"超出力が魅力。"},
+{name:"操虫棍",type:"近接武器",desc:"空中戦武器。"},
+{name:"ライトボウガン",type:"遠距離武器",desc:"機動力の高い射撃武器。"},
+{name:"ヘビィボウガン",type:"遠距離武器",desc:"高火力重火器。"},
+{name:"弓",type:"遠距離武器",desc:"スタミナ管理が重要。"}
+]
+
+function spin(){
+  const btn=document.getElementById("spinBtn")
+  btn.disabled=true
+  let count=0
+  let interval=setInterval(()=>{
+    let r=Math.floor(Math.random()*weapons.length)
+    document.getElementById("result").innerText=weapons[r].name
+    count++
+    if(count>20){
+      clearInterval(interval)
+      let index=Math.floor(Math.random()*weapons.length)
+      let w=weapons[index]
+      document.getElementById("result").innerText=w.name
+      document.getElementById("type").innerText="系統 : "+w.type
+      document.getElementById("desc").innerText=w.desc
+      document.getElementById("luck").innerText="グッドラック！"
+      saveHistory(w.name)
+      saveStats(w.name)
+      btn.disabled=false
+    }
+  },70)
+}
+
+function saveHistory(name){
+  let history=JSON.parse(localStorage.getItem("mh_history"))||[]
+  history.unshift(name)
+  localStorage.setItem("mh_history",JSON.stringify(history))
+  updateHistory()
+}
+
+function updateHistory(){
+  let history=JSON.parse(localStorage.getItem("mh_history"))||[]
+  let html=""
+  history.forEach((w,i)=>{
+    let number=history.length-i
+    html+="#"+number+" "+w+"<br>"
+  })
+  document.getElementById("history").innerHTML=html
+}
+
+function clearHistory(){
+  localStorage.removeItem("mh_history")
+  localStorage.removeItem("mh_stats")
+  updateHistory()
+  updateStats()
+}
+
+function saveStats(name){
+  let stats=JSON.parse(localStorage.getItem("mh_stats"))||{}
+  if(!stats[name]) stats[name]=0
+  stats[name]++
+  localStorage.setItem("mh_stats",JSON.stringify(stats))
+  updateStats()
+}
+
+let chart
+function updateStats(){
+  let stats=JSON.parse(localStorage.getItem("mh_stats"))||{}
+  let labels=[]
+  let data=[]
+  let total=0
+  for(let w in stats){
+    labels.push(w)
+    data.push(stats[w])
+    total += stats[w]
+  }
+  let ctx=document.getElementById("statsChart")
+  if(chart) chart.destroy()
+  chart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:labels,datasets:[{label:'使用回数',data:data}]},
+    options:{responsive:true}
+  })
+
+  // 出現率表示
+  let html="武器出現率:<br>"
+  for(let w in stats){
+    let percent = ((stats[w]/total)*100).toFixed(1)
+    html += w + " : " + stats[w] + "回 (" + percent + "%)<br>"
+  }
+  document.getElementById("statsPercent").innerHTML = html
+}
+
+updateHistory()
+updateStats()
+</script>
+</body>
+</html>
+```
