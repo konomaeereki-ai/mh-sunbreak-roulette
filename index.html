@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>サンブレイク武器ルーレット 最終版</title>
+<title>サンブレイク武器ルーレット 完全版</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -37,8 +37,8 @@ h1{color:#ff7a2f;font-size:22px;margin-bottom:20px;}
 }
 #result{
   font-size:42px;
-  white-space:normal;     
-  overflow-wrap:break-word; 
+  white-space:normal;
+  overflow-wrap:break-word;
   text-align:center;
   transition: all 0.3s ease;
 }
@@ -62,7 +62,7 @@ select{font-size:16px;padding:5px;border-radius:6px;border:none;}
 </head>
 
 <body>
-<h1>モンハン サンブレイク 武器ルーレット 最終版</h1>
+<h1>モンハン サンブレイク 武器ルーレット 完全版</h1>
 
 <div id="rouletteBox">
   <div id="result">？？？</div>
@@ -127,40 +127,41 @@ function spin(){
 
   const n=parseInt(document.getElementById("numSpin").value)
   let i=0
-
   const spinSE=document.getElementById("spinSE")
   const hitSE=document.getElementById("hitSE")
   const luckSE=document.getElementById("luckSE")
 
+  let finalIndex=Math.floor(Math.random()*weapons.length)
+  let w=weapons[finalIndex]
+
+  // ルーレット演出
   const interval=setInterval(()=>{
     let r=Math.floor(Math.random()*weapons.length)
     document.getElementById("result").innerText=weapons[r].name
     spinSE.currentTime=0; spinSE.play().catch(()=>{})
     i++
-    if(i>=n){
+    if(i>=20){ // 最低20回ルーレット表示
       clearInterval(interval)
-      let finalIndex=Math.floor(Math.random()*weapons.length)
-      let w=weapons[finalIndex]
+      document.getElementById("result").innerText=w.name
+      document.getElementById("type").innerText="系統 : "+w.type
+      document.getElementById("desc").innerText=w.desc
 
-      // 片手剣のみ2%でレア演出
+      // 片手剣レア演出2%
       let resElem=document.getElementById("result")
       resElem.classList.remove("rare")
       if(w.name==="片手剣" && Math.random()<0.02){
-          resElem.classList.add("rare")
+        resElem.classList.add("rare")
       }
 
-      resElem.innerText=w.name
-      document.getElementById("type").innerText="系統 : "+w.type
-      document.getElementById("desc").innerText=w.desc
       document.getElementById("luck").innerText="グッドラック！"
       hitSE.currentTime=0; hitSE.play().catch(()=>{})
       setTimeout(()=>{luckSE.currentTime=0; luckSE.play().catch(()=>{})},200)
 
-      // n回まとめ回しもすべて枠に出た武器で記録
+      // n回まとめ回しも全て枠に出た武器で記録
       for(let j=0;j<n;j++){
         if(j===n-1){
           let quest="クエスト "+(new Date()).toLocaleString()
-          saveHistory(w.name + " ("+quest+")")
+          saveHistory(w.name+" ("+quest+")")
         } else {
           saveHistory(w.name)
         }
