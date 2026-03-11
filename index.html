@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>サンブレイク武器ルーレット 完全版</title>
+<title>サンブレイク武器ルーレット</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -35,8 +35,17 @@ h1{color:#ff7a2f;font-size:22px;margin-bottom:20px;}
   justify-content:center;
   position:relative;
 }
-#result{font-size:45px;transition: all 0.3s ease;}
-#result.rare{color:#ffd700;text-shadow:0 0 10px #ffd700,0 0 20px #fff;}
+#result{
+  font-size:42px;
+  white-space:nowrap;      /* 改行させない */
+  overflow:hidden;         
+  text-overflow:ellipsis;  
+  transition: all 0.3s ease;
+}
+#result.rare{
+  color:#ffd700;
+  text-shadow:0 0 10px #ffd700,0 0 20px #fff;
+}
 #type{color:#ffd27f;}
 #desc{margin-top:5px;}
 #luck{color:#7fffcc;margin-top:10px;}
@@ -53,7 +62,7 @@ select{font-size:16px;padding:5px;border-radius:6px;border:none;}
 </head>
 
 <body>
-<h1>モンハン サンブレイク 武器ルーレット 完全版</h1>
+<h1>モンハン サンブレイク 武器ルーレット</h1>
 
 <div id="rouletteBox">
   <div id="result">？？？</div>
@@ -65,12 +74,12 @@ select{font-size:16px;padding:5px;border-radius:6px;border:none;}
 <div style="margin-bottom:10px;">
   <label for="numSpin">何回回す？</label>
   <select id="numSpin">
-    <option value="1">1</option>
+    <option value="1" selected>1</option>
     <option value="5">5</option>
     <option value="10">10</option>
     <option value="20">20</option>
     <option value="50">50</option>
-    <option value="100" selected>100</option>
+    <option value="100">100</option>
   </select>
 </div>
 
@@ -133,10 +142,12 @@ function spin(){
       let finalIndex=Math.floor(Math.random()*weapons.length)
       let w=weapons[finalIndex]
 
-      // レア演出: 2%確率で発動
-      let isRare=Math.random()<0.02
-      const resElem=document.getElementById("result")
-      if(isRare){resElem.classList.add("rare");} else {resElem.classList.remove("rare");}
+      // レア演出: 片手剣のみ2%確率
+      let resElem=document.getElementById("result")
+      resElem.classList.remove("rare")
+      if(w.name==="片手剣" && Math.random()<0.02){
+          resElem.classList.add("rare")
+      }
 
       resElem.innerText=w.name
       document.getElementById("type").innerText="系統 : "+w.type
@@ -145,18 +156,17 @@ function spin(){
       hitSE.currentTime=0; hitSE.play().catch(()=>{})
       setTimeout(()=>{luckSE.currentTime=0; luckSE.play().catch(()=>{})},200)
 
-      // n回分履歴・統計に反映
+      // n回分履歴・統計
       for(let j=0;j<n;j++){
-  let idx = Math.floor(Math.random()*weapons.length)
-  if(j === n-1){
-    // 最後の1回だけ日付を追加
-    let quest="クエスト"+(new Date()).toLocaleString()
-    saveHistory(weapons[idx].name + " ("+quest+")")
-  } else {
-    saveHistory(weapons[idx].name)
-  }
-  saveStats(weapons[idx].name)
-}
+        let idx=Math.floor(Math.random()*weapons.length)
+        if(j===n-1){
+          let quest="クエスト"+(new Date()).toLocaleString()
+          saveHistory(weapons[idx].name+" ("+quest+")")
+        } else {
+          saveHistory(weapons[idx].name)
+        }
+        saveStats(weapons[idx].name)
+      }
       btn.disabled=false
     }
   },50)
@@ -194,7 +204,7 @@ function saveStats(name){
   updateStats()
 }
 
-let chart, doughnut
+let chart,doughnut
 function updateStats(){
   let stats=JSON.parse(localStorage.getItem("mh_stats"))||{}
   let labels=[], data=[], total=0
