@@ -1,3 +1,4 @@
+```html id="sbr-n-spin"
 <!DOCTYPE html>
 <html lang="ja">
 
@@ -59,19 +60,29 @@ h1{
 }
 
 button{
-  width:90%;
-  max-width:320px;
-  padding:15px;
-  margin:10px auto;
   font-size:20px;
   border:none;
   border-radius:10px;
   background:linear-gradient(#ff7a2f,#d84e00);
   color:white;
+  cursor:pointer;
 }
 
-button:disabled{
-  background:#555;
+/* ルーレットボタン */
+#spinBtn{
+  width:90%;
+  max-width:320px;
+  padding:15px;
+  margin:10px auto;
+}
+
+/* ボックス内ボタン（履歴削除など） */
+.box button{
+  width:100%;
+  max-width:300px;
+  padding:12px 0;
+  font-size:18px;
+  margin-bottom:10px;
 }
 
 .box{
@@ -98,6 +109,17 @@ button:disabled{
   line-height:1.6;
   margin-top:10px;
 }
+
+label{
+  font-size:16px;
+  margin-right:10px;
+}
+select{
+  font-size:16px;
+  padding:5px;
+  border-radius:6px;
+  border:none;
+}
 </style>
 </head>
 
@@ -110,6 +132,19 @@ button:disabled{
   <div id="type"></div>
   <div id="desc"></div>
   <div id="luck"></div>
+</div>
+
+<!-- n 回ルーレットプルダウン -->
+<div style="margin-bottom:10px;">
+  <label for="numSpin">何回回す？</label>
+  <select id="numSpin">
+    <option value="1">1</option>
+    <option value="5">5</option>
+    <option value="10">10</option>
+    <option value="20">20</option>
+    <option value="50">50</option>
+    <option value="100" selected>100</option>
+  </select>
 </div>
 
 <button id="spinBtn" onclick="spin()">ルーレットを回す</button>
@@ -147,24 +182,33 @@ const weapons=[
 function spin(){
   const btn=document.getElementById("spinBtn")
   btn.disabled=true
-  let count=0
-  let interval=setInterval(()=>{
-    let r=Math.floor(Math.random()*weapons.length)
-    document.getElementById("result").innerText=weapons[r].name
-    count++
-    if(count>20){
+
+  const n = parseInt(document.getElementById("numSpin").value)
+  let i = 0
+
+  const interval = setInterval(()=>{
+    let r = Math.floor(Math.random()*weapons.length)
+    document.getElementById("result").innerText = weapons[r].name
+    i++
+    if(i>=n){
       clearInterval(interval)
-      let index=Math.floor(Math.random()*weapons.length)
-      let w=weapons[index]
-      document.getElementById("result").innerText=w.name
-      document.getElementById("type").innerText="系統 : "+w.type
-      document.getElementById("desc").innerText=w.desc
-      document.getElementById("luck").innerText="グッドラック！"
-      saveHistory(w.name)
-      saveStats(w.name)
-      btn.disabled=false
+      let finalIndex = Math.floor(Math.random()*weapons.length)
+      let w = weapons[finalIndex]
+      document.getElementById("result").innerText = w.name
+      document.getElementById("type").innerText = "系統 : "+w.type
+      document.getElementById("desc").innerText = w.desc
+      document.getElementById("luck").innerText = "グッドラック！"
+
+      // n回分まとめて統計と履歴に反映
+      for(let j=0;j<n;j++){
+        let idx = Math.floor(Math.random()*weapons.length)
+        saveHistory(weapons[idx].name)
+        saveStats(weapons[idx].name)
+      }
+
+      btn.disabled = false
     }
-  },70)
+  },50)
 }
 
 function saveHistory(name){
@@ -233,3 +277,4 @@ updateStats()
 </body>
 </html>
 ```
+
