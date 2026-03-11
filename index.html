@@ -133,8 +133,8 @@ function spin(){
       let finalIndex=Math.floor(Math.random()*weapons.length)
       let w=weapons[finalIndex]
 
-      // レア演出: 20%確率で発動
-      let isRare=Math.random()<0.2
+      // レア演出: 2%確率で発動
+      let isRare=Math.random()<0.02
       const resElem=document.getElementById("result")
       if(isRare){resElem.classList.add("rare");} else {resElem.classList.remove("rare");}
 
@@ -147,11 +147,16 @@ function spin(){
 
       // n回分履歴・統計に反映
       for(let j=0;j<n;j++){
-        let idx=Math.floor(Math.random()*weapons.length)
-        let quest="クエスト"+(new Date()).toLocaleString()
-        saveHistory(weapons[idx].name+" ("+quest+")")
-        saveStats(weapons[idx].name)
-      }
+  let idx = Math.floor(Math.random()*weapons.length)
+  if(j === n-1){
+    // 最後の1回だけ日付を追加
+    let quest="クエスト"+(new Date()).toLocaleString()
+    saveHistory(weapons[idx].name + " ("+quest+")")
+  } else {
+    saveHistory(weapons[idx].name)
+  }
+  saveStats(weapons[idx].name)
+}
       btn.disabled=false
     }
   },50)
