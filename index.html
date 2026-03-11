@@ -56,8 +56,6 @@ button{font-size:20px;border:none;border-radius:10px;background:linear-gradient(
 .title{color:#ffb37a;margin-bottom:10px;}
 #history{text-align:left;line-height:1.6;}
 #statsPercent{text-align:left;line-height:1.6;margin-top:10px;}
-label{font-size:16px;margin-right:10px;}
-select{font-size:16px;padding:5px;border-radius:6px;border:none;}
 </style>
 </head>
 
@@ -69,18 +67,6 @@ select{font-size:16px;padding:5px;border-radius:6px;border:none;}
   <div id="type"></div>
   <div id="desc"></div>
   <div id="luck"></div>
-</div>
-
-<div style="margin-bottom:10px;">
-  <label for="numSpin">何回回す？</label>
-  <select id="numSpin">
-    <option value="1" selected>1</option>
-    <option value="5">5</option>
-    <option value="10">10</option>
-    <option value="20">20</option>
-    <option value="50">50</option>
-    <option value="100">100</option>
-  </select>
 </div>
 
 <button id="spinBtn" onclick="spin()">ルーレットを回す</button>
@@ -125,8 +111,6 @@ function spin(){
   const btn=document.getElementById("spinBtn")
   btn.disabled=true
 
-  const n=parseInt(document.getElementById("numSpin").value)
-  let i=0
   const spinSE=document.getElementById("spinSE")
   const hitSE=document.getElementById("hitSE")
   const luckSE=document.getElementById("luckSE")
@@ -135,12 +119,13 @@ function spin(){
   let w=weapons[finalIndex]
 
   // ルーレット演出
+  let i=0
   const interval=setInterval(()=>{
     let r=Math.floor(Math.random()*weapons.length)
     document.getElementById("result").innerText=weapons[r].name
     spinSE.currentTime=0; spinSE.play().catch(()=>{})
     i++
-    if(i>=20){ // 最低20回ルーレット表示
+    if(i>=20){
       clearInterval(interval)
       document.getElementById("result").innerText=w.name
       document.getElementById("type").innerText="系統 : "+w.type
@@ -157,16 +142,10 @@ function spin(){
       hitSE.currentTime=0; hitSE.play().catch(()=>{})
       setTimeout(()=>{luckSE.currentTime=0; luckSE.play().catch(()=>{})},200)
 
-      // n回まとめ回しも全て枠に出た武器で記録
-      for(let j=0;j<n;j++){
-        if(j===n-1){
-          let quest="クエスト "+(new Date()).toLocaleString()
-          saveHistory(w.name+" ("+quest+")")
-        } else {
-          saveHistory(w.name)
-        }
-        saveStats(w.name)
-      }
+      // 履歴・統計に1回だけ反映
+      let quest="クエスト "+(new Date()).toLocaleString()
+      saveHistory(w.name+" ("+quest+")")
+      saveStats(w.name)
       btn.disabled=false
     }
   },50)
