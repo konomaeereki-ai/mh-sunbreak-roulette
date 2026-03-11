@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>サンブレイク武器ルーレット</title>
+<title>サンブレイク武器ルーレット 完全版</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -21,13 +21,7 @@ body{
   flex-direction:column;
   min-height:100vh;
 }
-
-h1{
-  color:#ff7a2f;
-  font-size:22px;
-  margin-bottom:20px;
-}
-
+h1{color:#ff7a2f;font-size:22px;margin-bottom:20px;}
 #rouletteBox{
   border:3px solid #ff7a2f;
   border-radius:12px;
@@ -39,92 +33,27 @@ h1{
   display:flex;
   flex-direction:column;
   justify-content:center;
+  position:relative;
 }
-
-#result{
-  font-size:45px;
-}
-
-#type{
-  color:#ffd27f;
-}
-
-#desc{
-  margin-top:5px;
-}
-
-#luck{
-  color:#7fffcc;
-  margin-top:10px;
-}
-
-button{
-  font-size:20px;
-  border:none;
-  border-radius:10px;
-  background:linear-gradient(#ff7a2f,#d84e00);
-  color:white;
-  cursor:pointer;
-}
-
-/* ルーレットボタン */
-#spinBtn{
-  width:90%;
-  max-width:320px;
-  padding:15px;
-  margin:10px auto;
-}
-
-/* ボックス内ボタン（履歴削除など） */
-.box button{
-  width:100%;
-  max-width:300px;
-  padding:12px 0;
-  font-size:18px;
-  margin-bottom:10px;
-}
-
-.box{
-  background:#161616;
-  border:2px solid #444;
-  border-radius:10px;
-  padding:15px;
-  margin:20px auto;
-  max-width:340px;
-}
-
-.title{
-  color:#ffb37a;
-  margin-bottom:10px;
-}
-
-#history{
-  text-align:left;
-  line-height:1.6;
-}
-
-#statsPercent{
-  text-align:left;
-  line-height:1.6;
-  margin-top:10px;
-}
-
-label{
-  font-size:16px;
-  margin-right:10px;
-}
-select{
-  font-size:16px;
-  padding:5px;
-  border-radius:6px;
-  border:none;
-}
+#result{font-size:45px;transition: all 0.3s ease;}
+#result.rare{color:#ffd700;text-shadow:0 0 10px #ffd700,0 0 20px #fff;}
+#type{color:#ffd27f;}
+#desc{margin-top:5px;}
+#luck{color:#7fffcc;margin-top:10px;}
+button{font-size:20px;border:none;border-radius:10px;background:linear-gradient(#ff7a2f,#d84e00);color:white;cursor:pointer;}
+#spinBtn{width:90%;max-width:320px;padding:15px;margin:10px auto;}
+.box button{width:100%;max-width:300px;padding:12px 0;font-size:18px;margin-bottom:10px;}
+.box{background:#161616;border:2px solid #444;border-radius:10px;padding:15px;margin:20px auto;max-width:340px;}
+.title{color:#ffb37a;margin-bottom:10px;}
+#history{text-align:left;line-height:1.6;}
+#statsPercent{text-align:left;line-height:1.6;margin-top:10px;}
+label{font-size:16px;margin-right:10px;}
+select{font-size:16px;padding:5px;border-radius:6px;border:none;}
 </style>
 </head>
 
 <body>
-
-<h1>モンハン サンブレイク 武器ルーレット</h1>
+<h1>モンハン サンブレイク 武器ルーレット 完全版</h1>
 
 <div id="rouletteBox">
   <div id="result">？？？</div>
@@ -133,7 +62,6 @@ select{
   <div id="luck"></div>
 </div>
 
-<!-- n 回ルーレットプルダウン -->
 <div style="margin-bottom:10px;">
   <label for="numSpin">何回回す？</label>
   <select id="numSpin">
@@ -157,8 +85,14 @@ select{
 <div class="box">
   <div class="title">武器統計</div>
   <canvas id="statsChart"></canvas>
+  <canvas id="statsDoughnut" style="margin-top:15px;"></canvas>
   <div id="statsPercent"></div>
 </div>
+
+<!-- 効果音 -->
+<audio id="spinSE" src="https://freesound.org/data/previews/341/341695_6266948-lq.mp3"></audio>
+<audio id="hitSE" src="https://freesound.org/data/previews/343/343632_6266948-lq.mp3"></audio>
+<audio id="luckSE" src="https://freesound.org/data/previews/341/341690_6266948-lq.mp3"></audio>
 
 <script>
 const weapons=[
@@ -182,30 +116,43 @@ function spin(){
   const btn=document.getElementById("spinBtn")
   btn.disabled=true
 
-  const n = parseInt(document.getElementById("numSpin").value)
-  let i = 0
+  const n=parseInt(document.getElementById("numSpin").value)
+  let i=0
 
-  const interval = setInterval(()=>{
-    let r = Math.floor(Math.random()*weapons.length)
-    document.getElementById("result").innerText = weapons[r].name
+  const spinSE=document.getElementById("spinSE")
+  const hitSE=document.getElementById("hitSE")
+  const luckSE=document.getElementById("luckSE")
+
+  const interval=setInterval(()=>{
+    let r=Math.floor(Math.random()*weapons.length)
+    document.getElementById("result").innerText=weapons[r].name
+    spinSE.currentTime=0; spinSE.play().catch(()=>{})
     i++
     if(i>=n){
       clearInterval(interval)
-      let finalIndex = Math.floor(Math.random()*weapons.length)
-      let w = weapons[finalIndex]
-      document.getElementById("result").innerText = w.name
-      document.getElementById("type").innerText = "系統 : "+w.type
-      document.getElementById("desc").innerText = w.desc
-      document.getElementById("luck").innerText = "グッドラック！"
+      let finalIndex=Math.floor(Math.random()*weapons.length)
+      let w=weapons[finalIndex]
 
-      // n回分まとめて統計と履歴に反映
+      // レア演出: 20%確率で発動
+      let isRare=Math.random()<0.2
+      const resElem=document.getElementById("result")
+      if(isRare){resElem.classList.add("rare");} else {resElem.classList.remove("rare");}
+
+      resElem.innerText=w.name
+      document.getElementById("type").innerText="系統 : "+w.type
+      document.getElementById("desc").innerText=w.desc
+      document.getElementById("luck").innerText="グッドラック！"
+      hitSE.currentTime=0; hitSE.play().catch(()=>{})
+      setTimeout(()=>{luckSE.currentTime=0; luckSE.play().catch(()=>{})},200)
+
+      // n回分履歴・統計に反映
       for(let j=0;j<n;j++){
-        let idx = Math.floor(Math.random()*weapons.length)
-        saveHistory(weapons[idx].name)
+        let idx=Math.floor(Math.random()*weapons.length)
+        let quest="クエスト"+(new Date()).toLocaleString()
+        saveHistory(weapons[idx].name+" ("+quest+")")
         saveStats(weapons[idx].name)
       }
-
-      btn.disabled = false
+      btn.disabled=false
     }
   },50)
 }
@@ -242,32 +189,38 @@ function saveStats(name){
   updateStats()
 }
 
-let chart
+let chart, doughnut
 function updateStats(){
   let stats=JSON.parse(localStorage.getItem("mh_stats"))||{}
-  let labels=[]
-  let data=[]
-  let total=0
+  let labels=[], data=[], total=0
   for(let w in stats){
     labels.push(w)
     data.push(stats[w])
-    total += stats[w]
+    total+=stats[w]
   }
-  let ctx=document.getElementById("statsChart")
+
+  const ctx=document.getElementById("statsChart")
   if(chart) chart.destroy()
   chart=new Chart(ctx,{
     type:'bar',
-    data:{labels:labels,datasets:[{label:'使用回数',data:data}]},
+    data:{labels:labels,datasets:[{label:'使用回数',data:data,backgroundColor:'#ff7a2f'}]},
     options:{responsive:true}
   })
 
-  // 出現率表示
+  const dctx=document.getElementById("statsDoughnut")
+  if(doughnut) doughnut.destroy()
+  doughnut=new Chart(dctx,{
+    type:'doughnut',
+    data:{labels:labels,datasets:[{label:'使用回数',data:data,backgroundColor:labels.map((_,i)=>`hsl(${i*25},80%,60%)`)}]},
+    options:{responsive:true}
+  })
+
   let html="武器出現率:<br>"
   for(let w in stats){
-    let percent = ((stats[w]/total)*100).toFixed(1)
-    html += w + " : " + stats[w] + "回 (" + percent + "%)<br>"
+    let percent=((stats[w]/total)*100).toFixed(1)
+    html+=w+" : "+stats[w]+"回 ("+percent+"%)<br>"
   }
-  document.getElementById("statsPercent").innerHTML = html
+  document.getElementById("statsPercent").innerHTML=html
 }
 
 updateHistory()
@@ -275,5 +228,3 @@ updateStats()
 </script>
 </body>
 </html>
-```
-
