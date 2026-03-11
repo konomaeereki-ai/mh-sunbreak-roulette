@@ -37,9 +37,9 @@ h1{color:#ff7a2f;font-size:22px;margin-bottom:20px;}
 }
 #result{
   font-size:42px;
-  white-space:nowrap;      /* 改行させない */
-  overflow:hidden;         
-  text-overflow:ellipsis;  
+  white-space:normal;     /* 折り返し可能に変更 */
+  overflow-wrap:break-word; /* 長い名前でも枠内に収まるよう改行 */
+  text-align:center;
   transition: all 0.3s ease;
 }
 #result.rare{
