@@ -157,19 +157,18 @@ function spin(){
       setTimeout(()=>{luckSE.currentTime=0; luckSE.play().catch(()=>{})},200)
 
       // n回分履歴・統計
-      for(let j=0;j<n;j++){
-        let idx=Math.floor(Math.random()*weapons.length)
-        if(j===n-1){
-          let quest="クエスト"+(new Date()).toLocaleString()
-          saveHistory(weapons[idx].name+" ("+quest+")")
-        } else {
-          saveHistory(weapons[idx].name)
-        }
-        saveStats(weapons[idx].name)
-      }
-      btn.disabled=false
+   let w = weapons[finalIndex]  // 最終武器を決定
+
+for(let j=0;j<n;j++){
+    if(j===n-1){
+        // 最後の1回だけ日付付き
+        let quest="クエスト "+(new Date()).toLocaleString()
+        saveHistory(w.name + " ("+quest+")")
+    } else {
+        // まとめ回し分も全て同じ武器
+        saveHistory(w.name)
     }
-  },50)
+    saveStats(w.name)
 }
 
 function saveHistory(name){
