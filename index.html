@@ -140,7 +140,11 @@ function spin(){
 
       document.getElementById("luck").innerText="グッドラック！"
       hitSE.currentTime=0; hitSE.play().catch(()=>{})
-      setTimeout(()=>{luckSE.currentTime=0; luckSE.play().catch(()=>{})},200)
+      hitSE.onended = function(){
+  if(w.name === "片手剣" && Math.random() < 0.02){
+      luckSE.currentTime = 0
+      luckSE.play().catch(()=>{})
+  
 
       // 履歴・統計に1回だけ反映
       let quest=" "+(new Date()).toLocaleString()
