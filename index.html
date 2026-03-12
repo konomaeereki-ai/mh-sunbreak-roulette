@@ -108,6 +108,7 @@ const weapons=[
 ]
 
 function spin(){
+
   const btn=document.getElementById("spinBtn")
   btn.disabled=true
 
@@ -118,27 +119,61 @@ function spin(){
   let finalIndex=Math.floor(Math.random()*weapons.length)
   let w=weapons[finalIndex]
 
-  // ルーレット演出
   let i=0
+
   const interval=setInterval(()=>{
+
     let r=Math.floor(Math.random()*weapons.length)
     document.getElementById("result").innerText=weapons[r].name
-    spinSE.currentTime=0; spinSE.play().catch(()=>{})
+
+    if(i%3===0){
+      spinSE.currentTime=0
+      spinSE.play().catch(()=>{})
+    }
+
     i++
+
     if(i>=20){
+
       clearInterval(interval)
+
       document.getElementById("result").innerText=w.name
       document.getElementById("type").innerText="系統 : "+w.type
       document.getElementById("desc").innerText=w.desc
 
-      // 片手剣レア演出2%
-let isRare = false
-let resElem=document.getElementById("result")
-resElem.classList.remove("rare")
+      let resElem=document.getElementById("result")
+      resElem.classList.remove("rare")
 
-if(w.name==="片手剣" && Math.random()<0.02){
-  resElem.classList.add("rare")
-  isRare = true
+      let isRare=false
+
+      if(w.name==="片手剣" && Math.random()<0.02){
+        resElem.classList.add("rare")
+        isRare=true
+      }
+
+      document.getElementById("luck").innerText="グッドラック！"
+
+      hitSE.currentTime=0
+      hitSE.play().catch(()=>{})
+
+      hitSE.onended=function(){
+
+        if(isRare){
+          luckSE.currentTime=0
+          luckSE.play().catch(()=>{})
+        }
+
+        let quest=" "+(new Date()).toLocaleString()
+        saveHistory(w.name+" ("+quest+")")
+        saveStats(w.name)
+
+        btn.disabled=false
+      }
+
+    }
+
+  },50)
+
 }
 
 document.getElementById("luck").innerText="グッドラック！"
@@ -233,4 +268,4 @@ updateHistory()
 updateStats()
 </script>
 </body>
-</html>}
+</html>
