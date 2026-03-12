@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
 
 <meta charset="UTF-8">
@@ -14,117 +13,109 @@
 <style>
 
 body{
-    font-family:'Orbitron',sans-serif;
-    background:linear-gradient(#1b1b1b,#0c0c0c);
-    color:white;
-    text-align:center;
-    margin:0;
-    padding:20px;
+font-family:'Orbitron',sans-serif;
+background:linear-gradient(#1b1b1b,#0c0c0c);
+color:white;
+text-align:center;
+margin:0;
+padding:20px;
 }
 
 h1{
-    color:#ff7a2f;
-    margin-bottom:20px;
+color:#ff7a2f;
 }
 
-/* 武器表示枠 */
+/* 武器表示 */
 
 #rouletteBox{
-    border:3px solid #ff7a2f;
-    border-radius:12px;
-    background:#111;
-    padding:25px;
-    margin:0 auto 20px auto;
-    max-width:320px;
-    box-shadow:0 0 10px rgba(255,122,47,0.5);
+border:3px solid #ff7a2f;
+border-radius:12px;
+background:#111;
+padding:25px;
+margin:0 auto 20px auto;
+max-width:320px;
+box-shadow:0 0 10px rgba(255,122,47,0.5);
 }
 
 #result{
-    font-size:42px;
+font-size:42px;
 }
 
 #result.rare{
-    color:#ffd700;
-    text-shadow:0 0 10px #ffd700,0 0 20px #fff;
+color:#ffd700;
+text-shadow:0 0 10px #ffd700;
 }
 
 #desc{
-    margin-top:10px;
-    color:#ffd27f;
+margin-top:10px;
+color:#ffd27f;
 }
 
 #luck{
-    margin-top:10px;
-    color:#7fffcc;
+margin-top:10px;
+color:#7fffcc;
 }
 
-/* ボタン */
+/* UI */
 
 button{
-    font-size:18px;
-    padding:10px 20px;
-    border:none;
-    border-radius:8px;
-    background:#ff7a2f;
-    color:white;
-    cursor:pointer;
-    margin:5px;
+font-size:18px;
+padding:10px 20px;
+border:none;
+border-radius:8px;
+background:#ff7a2f;
+color:white;
+cursor:pointer;
+margin:5px;
 }
 
-/* UIボックス */
-
 .box{
-    background:#161616;
-    border:2px solid #444;
-    border-radius:10px;
-    padding:15px;
-    margin:20px auto;
-    max-width:420px;
+background:#161616;
+border:2px solid #444;
+border-radius:10px;
+padding:15px;
+margin:20px auto;
+max-width:420px;
 }
 
 .weaponGrid{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:6px;
-    text-align:left;
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:6px;
+text-align:left;
 }
 
 /* 履歴スクロール */
 
 #history{
-    text-align:left;
-    line-height:1.6;
-    max-height:220px;
-    overflow-y:auto;
-    padding-right:6px;
+text-align:left;
+line-height:1.6;
+max-height:220px;
+overflow-y:auto;
 }
 
 #history::-webkit-scrollbar{
-    width:6px;
+width:6px;
 }
 
 #history::-webkit-scrollbar-thumb{
-    background:#ff7a2f;
-    border-radius:4px;
-}
-
-#history::-webkit-scrollbar-track{
-    background:#222;
+background:#ff7a2f;
 }
 
 /* レア演出 */
 
 @keyframes goldFlash{
-    0%{background:#0c0c0c;}
-    50%{background:#ffd700;}
-    100%{background:#0c0c0c;}
+0%{background:#0c0c0c;}
+50%{background:#ffd700;}
+100%{background:#0c0c0c;}
 }
 
 .flash{
-    animation:goldFlash 0.6s ease 3;
+animation:goldFlash 0.6s ease 3;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -141,6 +132,23 @@ button{
 
 <button onclick="spin()">一狩り行く</button>
 
+<div class="box">
+
+<h3>得意武器</h3>
+
+<select id="favorite">
+<option value="">なし</option>
+</select>
+
+</div>
+
+<div class="box">
+
+<h3>除外武器</h3>
+
+<div id="banList" class="weaponGrid"></div>
+
+</div>
 
 <div class="box">
 
@@ -152,7 +160,6 @@ button{
 
 </div>
 
-
 <div class="box">
 
 <h3>武器統計</h3>
@@ -163,175 +170,183 @@ button{
 
 </div>
 
-
 <audio id="hitSE" src="SE/MHF Q.wav"></audio>
 <audio id="luckSE" src="SE/ultl.wav"></audio>
 
-
 <script>
 
-/* =====================
-   武器データ
-===================== */
-
 const weapons=[
-
-{name:"大剣",desc:"溜め斬りで超火力を叩き込む。"},
-{name:"太刀",desc:"見切りカウンターが魅力。"},
-{name:"片手剣",desc:"機動力の高い万能武器。"},
-{name:"双剣",desc:"手数で攻める高速武器。"},
-{name:"ハンマー",desc:"頭を狙ってスタン。"},
-{name:"狩猟笛",desc:"旋律で仲間を強化。"},
+{name:"大剣",desc:"溜め斬りで超火力。"},
+{name:"太刀",desc:"見切りカウンター。"},
+{name:"片手剣",desc:"機動力万能武器。"},
+{name:"双剣",desc:"手数武器。"},
+{name:"ハンマー",desc:"スタン狙い。"},
+{name:"狩猟笛",desc:"旋律サポート。"},
 {name:"ランス",desc:"鉄壁ガード。"},
-{name:"ガンランス",desc:"砲撃で爆発。"},
+{name:"ガンランス",desc:"砲撃武器。"},
 {name:"スラッシュアックス",desc:"変形武器。"},
-{name:"チャージアックス",desc:"超出力解放斬り。"},
-{name:"操虫棍",desc:"空中戦武器。"},
-{name:"ライトボウガン",desc:"機動力の高い射撃武器。"},
-{name:"ヘビィボウガン",desc:"高火力重火器。"},
-{name:"弓",desc:"スタミナ管理が重要。"}
+{name:"チャージアックス",desc:"超出力解放。"},
+{name:"操虫棍",desc:"空中戦。"},
+{name:"ライトボウガン",desc:"機動射撃。"},
+{name:"ヘビィボウガン",desc:"重火力。"},
+{name:"弓",desc:"スタミナ武器。"}
 ]
 
-/* =====================
-   保存データ
-===================== */
+let stats=JSON.parse(localStorage.getItem("mh_stats"))||{}
+let history=JSON.parse(localStorage.getItem("mh_history"))||[]
 
-let stats=JSON.parse(localStorage.getItem("mh_stats")) || {}
-let history=JSON.parse(localStorage.getItem("mh_history")) || []
+const fav=document.getElementById("favorite")
+const banList=document.getElementById("banList")
 
-/* =====================
-   ルーレット
-===================== */
+/* UI生成 */
+
+weapons.forEach(w=>{
+
+let opt=document.createElement("option")
+opt.value=w.name
+opt.textContent=w.name
+fav.appendChild(opt)
+
+let label=document.createElement("label")
+
+let box=document.createElement("input")
+box.type="checkbox"
+box.value=w.name
+
+label.appendChild(box)
+label.appendChild(document.createTextNode(" "+w.name))
+
+banList.appendChild(label)
+
+})
 
 function spin(){
 
-    const hitSE=document.getElementById("hitSE")
-    const luckSE=document.getElementById("luckSE")
+document.getElementById("luck").innerText=""
+document.getElementById("desc").innerText=""
 
-    let i=0
+const hitSE=document.getElementById("hitSE")
+const luckSE=document.getElementById("luckSE")
 
-    function roulette(){
+let banned=[...document.querySelectorAll("#banList input:checked")].map(b=>b.value)
+let favorite=fav.value
 
-        let r=weapons[Math.floor(Math.random()*weapons.length)]
+let pool=[]
 
-        document.getElementById("result").innerText=r.name
+weapons.forEach(w=>{
 
-        i++
+if(banned.includes(w.name)) return
 
-        if(i<20){
+let weight=1
+if(w.name===favorite) weight=3
 
-            setTimeout(roulette,40+i*3)
+for(let i=0;i<weight;i++) pool.push(w)
 
-        }else{
+})
 
-            let w=weapons[Math.floor(Math.random()*weapons.length)]
+let i=0
 
-            showResult(w)
+function roulette(){
 
-        }
+let r=pool[Math.floor(Math.random()*pool.length)]
+document.getElementById("result").innerText=r.name
 
-    }
+i++
 
-    roulette()
+if(i<20){
 
-    function showResult(w){
+setTimeout(roulette,40+i*3)
 
-        let res=document.getElementById("result")
+}else{
 
-        res.classList.remove("rare")
-
-        res.innerText=w.name
-
-        document.getElementById("desc").innerText=w.desc
-
-        hitSE.currentTime=0
-        hitSE.play().catch(()=>{})
-
-        let isRare=false
-
-        if(w.name==="片手剣" && Math.random()<0.02){
-
-            isRare=true
-
-            res.classList.add("rare")
-
-            document.body.classList.add("flash")
-
-            setTimeout(()=>{
-                document.body.classList.remove("flash")
-            },1800)
-
-        }
-
-        document.getElementById("luck").innerText="グッドラック！"
-
-        if(isRare){
-
-            hitSE.onended=function(){
-
-                luckSE.currentTime=0
-                luckSE.play().catch(()=>{})
-
-            }
-
-        }
-
-        stats[w.name]=(stats[w.name]||0)+1
-
-        localStorage.setItem("mh_stats",JSON.stringify(stats))
-
-        history.unshift(w.name+" "+new Date().toLocaleString())
-
-        if(history.length>100){
-            history.pop()
-        }
-
-        localStorage.setItem("mh_history",JSON.stringify(history))
-
-        updateHistory()
-        updateChart()
-
-    }
+showResult(pool[Math.floor(Math.random()*pool.length)])
 
 }
 
-/* =====================
-   履歴
-===================== */
+}
+
+roulette()
+
+function showResult(w){
+
+let res=document.getElementById("result")
+
+res.classList.remove("rare")
+
+res.innerText=w.name
+document.getElementById("desc").innerText=w.desc
+
+hitSE.currentTime=0
+hitSE.play()
+
+let isRare=false
+
+if(w.name==="片手剣" && Math.random()<0.02){
+
+isRare=true
+
+res.classList.add("rare")
+
+document.body.classList.add("flash")
+
+setTimeout(()=>document.body.classList.remove("flash"),1800)
+
+}
+
+document.getElementById("luck").innerText="グッドラック！"
+
+if(isRare){
+
+hitSE.onended=function(){
+luckSE.currentTime=0
+luckSE.play()
+}
+
+}
+
+stats[w.name]=(stats[w.name]||0)+1
+localStorage.setItem("mh_stats",JSON.stringify(stats))
+
+history.unshift(w.name+" "+new Date().toLocaleString())
+
+if(history.length>100) history.pop()
+
+localStorage.setItem("mh_history",JSON.stringify(history))
+
+updateHistory()
+updateChart()
+
+}
+
+}
 
 function updateHistory(){
 
-    let html=""
+let html=""
 
-    history.forEach((h,i)=>{
-        html+=(history.length-i)+" : "+h+"<br>"
-    })
+history.forEach((h,i)=>{
 
-    document.getElementById("history").innerHTML=html
+html+=(history.length-i)+" : "+h+"<br>"
+
+})
+
+document.getElementById("history").innerHTML=html
 
 }
 
 function clearHistory(){
 
-    history=[]
-
-    localStorage.removeItem("mh_history")
-
-    updateHistory()
+history=[]
+localStorage.removeItem("mh_history")
+updateHistory()
 
 }
 
-/* =====================
-   統計
-===================== */
-
 function clearStats(){
 
-    stats={}
-
-    localStorage.removeItem("mh_stats")
-
-    updateChart()
+stats={}
+localStorage.removeItem("mh_stats")
+updateChart()
 
 }
 
@@ -339,33 +354,27 @@ let chart
 
 function updateChart(){
 
-    let labels=Object.keys(stats)
-    let data=Object.values(stats)
+let labels=Object.keys(stats)
+let data=Object.values(stats)
 
-    if(chart) chart.destroy()
+if(chart) chart.destroy()
 
-    chart=new Chart(
-        document.getElementById("chart"),
-        {
-            type:"bar",
-            data:{
-                labels:labels,
-                datasets:[
-                    {
-                        label:"使用回数",
-                        data:data,
-                        backgroundColor:"#ff7a2f"
-                    }
-                ]
-            }
-        }
-    )
+chart=new Chart(document.getElementById("chart"),{
 
+type:"bar",
+
+data:{
+labels:labels,
+datasets:[{
+label:"使用回数",
+data:data,
+backgroundColor:"#ff7a2f"
+}]
 }
 
-/* =====================
-   初期ロード
-===================== */
+})
+
+}
 
 updateHistory()
 updateChart()
