@@ -29,12 +29,16 @@ h1{
 #result{
     font-size:42px;
     margin:20px;
-    transition:0.3s;
 }
 
 #result.rare{
     color:#ffd700;
     text-shadow:0 0 10px #ffd700,0 0 20px #fff;
+}
+
+#desc{
+    margin-top:10px;
+    color:#ffd27f;
 }
 
 #luck{
@@ -69,6 +73,11 @@ button{
     text-align:left;
 }
 
+#history{
+    text-align:left;
+    line-height:1.6;
+}
+
 /* レア演出 */
 
 @keyframes goldFlash{
@@ -89,6 +98,7 @@ button{
 <h1>MHD:LB 武器ルーレット</h1>
 
 <div id="result">？？？</div>
+<div id="desc"></div>
 <div id="luck"></div>
 
 <button onclick="spin()">ルーレット</button>
@@ -96,7 +106,7 @@ button{
 
 <div class="box">
 
-<h3>得意武器（確率UP）</h3>
+<h3>得意武器</h3>
 
 <select id="favorite">
 <option value="">なし</option>
@@ -121,7 +131,18 @@ button{
 <button onclick="recordWin()">成功</button>
 <button onclick="recordLose()">失敗</button>
 
-<div id="stats"></div>
+<div id="questStats"></div>
+
+</div>
+
+
+<div class="box">
+
+<h3>履歴</h3>
+
+<button onclick="clearHistory()">履歴リセット</button>
+
+<div id="history"></div>
 
 </div>
 
@@ -130,12 +151,12 @@ button{
 
 <h3>武器統計</h3>
 
+<button onclick="clearStats()">統計リセット</button>
+
 <canvas id="chart"></canvas>
 
 </div>
 
-
-<!-- 効果音 -->
 
 <audio id="hitSE" src="SE/MHF Q.wav"></audio>
 <audio id="luckSE" src="SE/ultl.wav"></audio>
@@ -144,28 +165,37 @@ button{
 <script>
 
 /* =====================
-   武器リスト
+   武器データ
 ===================== */
 
 const weapons=[
 
-"大剣","太刀","片手剣","双剣",
-"ハンマー","狩猟笛","ランス","ガンランス",
-"スラッシュアックス","チャージアックス","操虫棍",
-"ライトボウガン","ヘビィボウガン","弓"
-
+{name:"大剣",desc:"溜め斬りで超火力を叩き込む。"},
+{name:"太刀",desc:"見切りカウンターが魅力。"},
+{name:"片手剣",desc:"機動力の高い万能武器。"},
+{name:"双剣",desc:"手数で攻める高速武器。"},
+{name:"ハンマー",desc:"頭を狙ってスタン。"},
+{name:"狩猟笛",desc:"旋律で仲間を強化。"},
+{name:"ランス",desc:"鉄壁ガード。"},
+{name:"ガンランス",desc:"砲撃で爆発。"},
+{name:"スラッシュアックス",desc:"変形武器。"},
+{name:"チャージアックス",desc:"超出力解放斬り。"},
+{name:"操虫棍",desc:"空中戦武器。"},
+{name:"ライトボウガン",desc:"機動力の高い射撃武器。"},
+{name:"ヘビィボウガン",desc:"高火力重火器。"},
+{name:"弓",desc:"スタミナ管理が重要。"}
 ]
 
 /* =====================
-   データ保存
+   保存データ
 ===================== */
 
 let stats=JSON.parse(localStorage.getItem("mh_stats")) || {}
+let history=JSON.parse(localStorage.getItem("mh_history")) || []
 let quest=JSON.parse(localStorage.getItem("mh_quest")) || {win:0,lose:0}
 
 const fav=document.getElementById("favorite")
 const banList=document.getElementById("banList")
-
 
 /* =====================
    UI生成
@@ -174,23 +204,22 @@ const banList=document.getElementById("banList")
 weapons.forEach(w=>{
 
     let opt=document.createElement("option")
-    opt.value=w
-    opt.textContent=w
+    opt.value=w.name
+    opt.textContent=w.name
     fav.appendChild(opt)
 
     let label=document.createElement("label")
 
     let box=document.createElement("input")
     box.type="checkbox"
-    box.value=w
+    box.value=w.name
 
     label.appendChild(box)
-    label.appendChild(document.createTextNode(" "+w))
+    label.appendChild(document.createTextNode(" "+w.name))
 
     banList.appendChild(label)
 
 })
-
 
 /* =====================
    ルーレット
@@ -199,12 +228,13 @@ weapons.forEach(w=>{
 function spin(){
 
     document.getElementById("luck").innerText=""
+    document.getElementById("desc").innerText=""
 
     const hitSE=document.getElementById("hitSE")
     const luckSE=document.getElementById("luckSE")
 
     let banned=[...document.querySelectorAll("#banList input:checked")]
-    .map(b=>b.value)
+        .map(b=>b.value)
 
     let favorite=fav.value
 
@@ -212,11 +242,10 @@ function spin(){
 
     weapons.forEach(w=>{
 
-        if(banned.includes(w)) return
+        if(banned.includes(w.name)) return
 
         let weight=1
-
-        if(w===favorite) weight=3
+        if(w.name===favorite) weight=3
 
         for(let i=0;i<weight;i++){
             pool.push(w)
@@ -224,74 +253,134 @@ function spin(){
 
     })
 
-    let result=pool[Math.floor(Math.random()*pool.length)]
+    let i=0
 
-    let res=document.getElementById("result")
+    function roulette(){
 
-    res.classList.remove("rare")
-    res.innerText=result
+        let r=pool[Math.floor(Math.random()*pool.length)]
 
-    hitSE.currentTime=0
-    hitSE.play().catch(()=>{})
+        document.getElementById("result").innerText=r.name
 
-    let isRare=false
+        i++
 
-    if(result==="片手剣" && Math.random()<0.02){
-
-        isRare=true
-
-        res.classList.add("rare")
-
-        document.body.classList.add("flash")
-
-        setTimeout(()=>{
-            document.body.classList.remove("flash")
-        },1800)
-
-    }
-
-    document.getElementById("luck").innerText="グッドラック！"
-
-    if(isRare){
-
-        hitSE.onended=function(){
-            luckSE.currentTime=0
-            luckSE.play().catch(()=>{})
+        if(i<20){
+            setTimeout(roulette,40+i*3)
+        }else{
+            let result=pool[Math.floor(Math.random()*pool.length)]
+            showResult(result)
         }
 
     }
 
-    stats[result]=(stats[result]||0)+1
+    roulette()
 
-    localStorage.setItem("mh_stats",JSON.stringify(stats))
+    function showResult(w){
+
+        let res=document.getElementById("result")
+
+        res.classList.remove("rare")
+        res.innerText=w.name
+
+        document.getElementById("desc").innerText=w.desc
+
+        hitSE.currentTime=0
+        hitSE.play().catch(()=>{})
+
+        let isRare=false
+
+        if(w.name==="片手剣" && Math.random()<0.02){
+
+            isRare=true
+
+            res.classList.add("rare")
+
+            document.body.classList.add("flash")
+
+            setTimeout(()=>{
+                document.body.classList.remove("flash")
+            },1800)
+
+        }
+
+        document.getElementById("luck").innerText="グッドラック！"
+
+        if(isRare){
+
+            hitSE.onended=function(){
+                luckSE.currentTime=0
+                luckSE.play().catch(()=>{})
+            }
+
+        }
+
+        stats[w.name]=(stats[w.name]||0)+1
+        localStorage.setItem("mh_stats",JSON.stringify(stats))
+
+        history.unshift(w.name+" "+new Date().toLocaleString())
+        localStorage.setItem("mh_history",JSON.stringify(history))
+
+        updateHistory()
+        updateChart()
+
+    }
+
+}
+
+/* =====================
+   履歴
+===================== */
+
+function updateHistory(){
+
+    let html=""
+
+    history.forEach((h,i)=>{
+        html+=(history.length-i)+" : "+h+"<br>"
+    })
+
+    document.getElementById("history").innerHTML=html
+
+}
+
+function clearHistory(){
+
+    history=[]
+    localStorage.removeItem("mh_history")
+
+    updateHistory()
+
+}
+
+/* =====================
+   統計
+===================== */
+
+function clearStats(){
+
+    stats={}
+    localStorage.removeItem("mh_stats")
 
     updateChart()
 
 }
-
 
 /* =====================
    クエスト結果
 ===================== */
 
 function recordWin(){
-
     quest.win++
     saveQuest()
-
 }
 
 function recordLose(){
-
     quest.lose++
     saveQuest()
-
 }
 
 function saveQuest(){
 
     localStorage.setItem("mh_quest",JSON.stringify(quest))
-
     updateQuest()
 
 }
@@ -304,14 +393,11 @@ function updateQuest(){
         ?((quest.win/total)*100).toFixed(1)
         :0
 
-    document.getElementById("stats").innerHTML=
-    `
-    成功 ${quest.win} / 失敗 ${quest.lose}<br>
-    成功率 ${rate}%
-    `
+    document.getElementById("questStats").innerHTML=
+        "成功 "+quest.win+" / 失敗 "+quest.lose+
+        "<br>成功率 "+rate+"%"
 
 }
-
 
 /* =====================
    グラフ
@@ -339,20 +425,17 @@ function updateChart(){
                         backgroundColor:"#ff7a2f"
                     }
                 ]
-            },
-            options:{
-                responsive:true
             }
         }
     )
 
 }
 
-
 /* =====================
-   初期読み込み
+   初期ロード
 ===================== */
 
+updateHistory()
 updateQuest()
 updateChart()
 
