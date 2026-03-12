@@ -24,11 +24,23 @@ body{
 
 h1{
     color:#ff7a2f;
+    margin-bottom:20px;
+}
+
+/* 武器表示枠 */
+
+#rouletteBox{
+    border:3px solid #ff7a2f;
+    border-radius:12px;
+    background:#111;
+    padding:25px;
+    margin:0 auto 20px auto;
+    max-width:320px;
+    box-shadow:0 0 10px rgba(255,122,47,0.5);
 }
 
 #result{
     font-size:42px;
-    margin:20px;
 }
 
 #result.rare{
@@ -42,9 +54,11 @@ h1{
 }
 
 #luck{
+    margin-top:10px;
     color:#7fffcc;
-    margin-bottom:10px;
 }
+
+/* ボタン */
 
 button{
     font-size:18px;
@@ -56,6 +70,8 @@ button{
     cursor:pointer;
     margin:5px;
 }
+
+/* UIボックス */
 
 .box{
     background:#161616;
@@ -73,9 +89,27 @@ button{
     text-align:left;
 }
 
+/* 履歴スクロール */
+
 #history{
     text-align:left;
     line-height:1.6;
+    max-height:220px;
+    overflow-y:auto;
+    padding-right:6px;
+}
+
+#history::-webkit-scrollbar{
+    width:6px;
+}
+
+#history::-webkit-scrollbar-thumb{
+    background:#ff7a2f;
+    border-radius:4px;
+}
+
+#history::-webkit-scrollbar-track{
+    background:#222;
 }
 
 /* レア演出 */
@@ -97,43 +131,15 @@ button{
 
 <h1>MHD:LB 武器ルーレット</h1>
 
+<div id="rouletteBox">
+
 <div id="result">？？？</div>
 <div id="desc"></div>
 <div id="luck"></div>
 
+</div>
+
 <button onclick="spin()">ルーレット</button>
-
-
-<div class="box">
-
-<h3>得意武器</h3>
-
-<select id="favorite">
-<option value="">なし</option>
-</select>
-
-</div>
-
-
-<div class="box">
-
-<h3>禁止武器</h3>
-
-<div id="banList" class="weaponGrid"></div>
-
-</div>
-
-
-<div class="box">
-
-<h3>クエスト結果</h3>
-
-<button onclick="recordWin()">成功</button>
-<button onclick="recordLose()">失敗</button>
-
-<div id="questStats"></div>
-
-</div>
 
 
 <div class="box">
@@ -192,34 +198,6 @@ const weapons=[
 
 let stats=JSON.parse(localStorage.getItem("mh_stats")) || {}
 let history=JSON.parse(localStorage.getItem("mh_history")) || []
-let quest=JSON.parse(localStorage.getItem("mh_quest")) || {win:0,lose:0}
-
-const fav=document.getElementById("favorite")
-const banList=document.getElementById("banList")
-
-/* =====================
-   UI生成
-===================== */
-
-weapons.forEach(w=>{
-
-    let opt=document.createElement("option")
-    opt.value=w.name
-    opt.textContent=w.name
-    fav.appendChild(opt)
-
-    let label=document.createElement("label")
-
-    let box=document.createElement("input")
-    box.type="checkbox"
-    box.value=w.name
-
-    label.appendChild(box)
-    label.appendChild(document.createTextNode(" "+w.name))
-
-    banList.appendChild(label)
-
-})
 
 /* =====================
    ルーレット
@@ -227,47 +205,29 @@ weapons.forEach(w=>{
 
 function spin(){
 
-    document.getElementById("luck").innerText=""
-    document.getElementById("desc").innerText=""
-
     const hitSE=document.getElementById("hitSE")
     const luckSE=document.getElementById("luckSE")
-
-    let banned=[...document.querySelectorAll("#banList input:checked")]
-        .map(b=>b.value)
-
-    let favorite=fav.value
-
-    let pool=[]
-
-    weapons.forEach(w=>{
-
-        if(banned.includes(w.name)) return
-
-        let weight=1
-        if(w.name===favorite) weight=3
-
-        for(let i=0;i<weight;i++){
-            pool.push(w)
-        }
-
-    })
 
     let i=0
 
     function roulette(){
 
-        let r=pool[Math.floor(Math.random()*pool.length)]
+        let r=weapons[Math.floor(Math.random()*weapons.length)]
 
         document.getElementById("result").innerText=r.name
 
         i++
 
         if(i<20){
+
             setTimeout(roulette,40+i*3)
+
         }else{
-            let result=pool[Math.floor(Math.random()*pool.length)]
-            showResult(result)
+
+            let w=weapons[Math.floor(Math.random()*weapons.length)]
+
+            showResult(w)
+
         }
 
     }
@@ -279,6 +239,7 @@ function spin(){
         let res=document.getElementById("result")
 
         res.classList.remove("rare")
+
         res.innerText=w.name
 
         document.getElementById("desc").innerText=w.desc
@@ -307,16 +268,24 @@ function spin(){
         if(isRare){
 
             hitSE.onended=function(){
+
                 luckSE.currentTime=0
                 luckSE.play().catch(()=>{})
+
             }
 
         }
 
         stats[w.name]=(stats[w.name]||0)+1
+
         localStorage.setItem("mh_stats",JSON.stringify(stats))
 
         history.unshift(w.name+" "+new Date().toLocaleString())
+
+        if(history.length>100){
+            history.pop()
+        }
+
         localStorage.setItem("mh_history",JSON.stringify(history))
 
         updateHistory()
@@ -345,6 +314,7 @@ function updateHistory(){
 function clearHistory(){
 
     history=[]
+
     localStorage.removeItem("mh_history")
 
     updateHistory()
@@ -358,50 +328,12 @@ function clearHistory(){
 function clearStats(){
 
     stats={}
+
     localStorage.removeItem("mh_stats")
 
     updateChart()
 
 }
-
-/* =====================
-   クエスト結果
-===================== */
-
-function recordWin(){
-    quest.win++
-    saveQuest()
-}
-
-function recordLose(){
-    quest.lose++
-    saveQuest()
-}
-
-function saveQuest(){
-
-    localStorage.setItem("mh_quest",JSON.stringify(quest))
-    updateQuest()
-
-}
-
-function updateQuest(){
-
-    let total=quest.win+quest.lose
-
-    let rate=total
-        ?((quest.win/total)*100).toFixed(1)
-        :0
-
-    document.getElementById("questStats").innerHTML=
-        "成功 "+quest.win+" / 失敗 "+quest.lose+
-        "<br>成功率 "+rate+"%"
-
-}
-
-/* =====================
-   グラフ
-===================== */
 
 let chart
 
@@ -436,7 +368,6 @@ function updateChart(){
 ===================== */
 
 updateHistory()
-updateQuest()
 updateChart()
 
 </script>
