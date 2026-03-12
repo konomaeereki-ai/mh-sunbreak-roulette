@@ -132,27 +132,35 @@ function spin(){
       document.getElementById("desc").innerText=w.desc
 
       // 片手剣レア演出2%
-      let resElem=document.getElementById("result")
-      resElem.classList.remove("rare")
-      if(w.name==="片手剣" && Math.random()<0.02){
-        resElem.classList.add("rare")
-      }
+let isRare = false
+let resElem=document.getElementById("result")
+resElem.classList.remove("rare")
 
-      document.getElementById("luck").innerText="グッドラック！"
-      hitSE.currentTime=0; hitSE.play().catch(()=>{})
-      hitSE.onended = function(){
-  if(w.name === "片手剣" && Math.random() < 0.02){
-      luckSE.currentTime = 0
-      luckSE.play().catch(()=>{})
-  
+if(w.name==="片手剣" && Math.random()<0.02){
+  resElem.classList.add("rare")
+  isRare = true
+}
 
-      // 履歴・統計に1回だけ反映
-      let quest=" "+(new Date()).toLocaleString()
-      saveHistory(w.name+" ("+quest+")")
-      saveStats(w.name)
-      btn.disabled=false
-    }
-  },50
+document.getElementById("luck").innerText="グッドラック！"
+
+// 決定音
+hitSE.currentTime = 0
+hitSE.play().catch(()=>{})
+
+// 決定音終了後
+hitSE.onended = function(){
+
+  if(isRare){
+    luckSE.currentTime = 0
+    luckSE.play().catch(()=>{})
+  }
+
+  // 履歴・統計
+  let quest=" "+(new Date()).toLocaleString()
+  saveHistory(w.name+" ("+quest+")")
+  saveStats(w.name)
+
+  btn.disabled=false
 }
 
 function saveHistory(name){
