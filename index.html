@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>サンブレイク武器ルーレット 完全版</title>
+<title>サンブレイク武器ルーレット</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -60,7 +60,7 @@ button{font-size:20px;border:none;border-radius:10px;background:linear-gradient(
 </head>
 
 <body>
-<h1>モンハン サンブレイク 武器ルーレット 完全版</h1>
+<h1>MHR:SB 武器ルーレット</h1>
 
 <div id="rouletteBox">
   <div id="result">？？？</div>
@@ -143,7 +143,7 @@ function spin(){
       setTimeout(()=>{luckSE.currentTime=0; luckSE.play().catch(()=>{})},200)
 
       // 履歴・統計に1回だけ反映
-      let quest="クエスト "+(new Date()).toLocaleString()
+      let quest="(new Date()").toLocaleString()
       saveHistory(w.name+" ("+quest+")")
       saveStats(w.name)
       btn.disabled=false
