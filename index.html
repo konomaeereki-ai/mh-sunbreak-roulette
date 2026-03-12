@@ -2,10 +2,11 @@
 <html lang="ja">
 
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>サンブレイク武器ルーレット</title>
+<title>MHD:LB 武器ルーレット</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,66 +20,27 @@ body{
     text-align:center;
     margin:0;
     padding:20px;
-    display:flex;
-    flex-direction:column;
-    min-height:100vh;
 }
 
 h1{
     color:#ff7a2f;
-    font-size:22px;
-    margin-bottom:20px;
-}
-
-/* ルーレット表示 */
-
-#rouletteBox{
-    border:3px solid #ff7a2f;
-    border-radius:12px;
-    padding:25px;
-    margin:0 auto 20px auto;
-    max-width:260px;
-    background:#111;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
 }
 
 #result{
-    font-size:42px;
-    text-align:center;
-    overflow-wrap:break-word;
-    transition:0.3s;
+    font-size:40px;
+    margin:20px;
 }
-
-#result.rare{
-    color:#ffd700;
-    text-shadow:0 0 10px #ffd700,0 0 20px #fff;
-}
-
-#type{ color:#ffd27f }
-#desc{ margin-top:5px }
-#luck{ color:#7fffcc; margin-top:10px }
-
-/* ボタン */
 
 button{
-    font-size:20px;
+    font-size:18px;
+    padding:10px 20px;
     border:none;
-    border-radius:10px;
-    background:linear-gradient(#ff7a2f,#d84e00);
+    border-radius:8px;
+    background:#ff7a2f;
     color:white;
     cursor:pointer;
+    margin:5px;
 }
-
-#spinBtn{
-    width:90%;
-    max-width:320px;
-    padding:15px;
-    margin:10px auto;
-}
-
-/* ボックス */
 
 .box{
     background:#161616;
@@ -86,41 +48,18 @@ button{
     border-radius:10px;
     padding:15px;
     margin:20px auto;
-    max-width:340px;
+    max-width:420px;
 }
 
-.box button{
-    width:100%;
-    padding:12px 0;
-    margin-bottom:10px;
-}
-
-.title{
-    color:#ffb37a;
-    margin-bottom:10px;
-}
-
-#history{
+.weaponGrid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:5px;
     text-align:left;
-    line-height:1.6;
 }
 
-#statsPercent{
-    text-align:left;
-    line-height:1.6;
+.stat{
     margin-top:10px;
-}
-
-/* レア演出 */
-
-@keyframes goldFlash{
-    0%{background:#0c0c0c;}
-    50%{background:#ffd700;}
-    100%{background:#0c0c0c;}
-}
-
-.flash{
-    animation:goldFlash 0.6s ease 3;
 }
 
 </style>
@@ -128,303 +67,215 @@ button{
 
 <body>
 
-<h1>MHD:LB武器ルーレット</h1>
+<h1>MHD:LB 武器ルーレット</h1>
 
-<div id="rouletteBox">
-    <div id="result">？？？</div>
-    <div id="type"></div>
-    <div id="desc"></div>
-    <div id="luck"></div>
-</div>
+<div id="result">？？？</div>
 
-<button id="spinBtn" onclick="spin()">ルーレットを回す</button>
+<button onclick="spin()">ルーレット</button>
 
 <div class="box">
 
-    <div class="title">クエストログ</div>
+<h3>得意武器</h3>
 
-    <button onclick="clearHistory()">履歴を消す</button>
-
-    <div id="history"></div>
+<select id="favorite">
+<option value="">なし</option>
+</select>
 
 </div>
 
 <div class="box">
 
-    <div class="title">武器統計</div>
+<h3>禁止武器</h3>
 
-    <canvas id="statsChart"></canvas>
-    <canvas id="statsDoughnut" style="margin-top:15px;"></canvas>
-
-    <div id="statsPercent"></div>
+<div class="weaponGrid" id="banList"></div>
 
 </div>
 
+<div class="box">
 
-<!-- 効果音 -->
+<h3>結果記録</h3>
 
-<audio id="spinSE" src="SE/dis.mp3"></audio>
-<audio id="hitSE" src="SE/MHF Q.wav"></audio>
-<audio id="luckSE" src="SE/ultl.wav"></audio>
+<button onclick="recordWin()">成功</button>
+<button onclick="recordLose()">失敗</button>
 
+<div class="stat" id="stats"></div>
+
+</div>
+
+<div class="box">
+
+<h3>統計</h3>
+
+<canvas id="chart"></canvas>
+
+</div>
 
 <script>
 
-/* =========================
+/* ======================
    武器データ
-========================= */
+====================== */
 
 const weapons=[
 
-{name:"大剣",type:"近接武器",desc:"溜め斬りで超火力を叩き込む。"},
-{name:"太刀",type:"近接武器",desc:"見切りカウンターが魅力。"},
-{name:"片手剣",type:"近接武器",desc:"機動力の高い万能武器。"},
-{name:"双剣",type:"近接武器",desc:"手数で攻める高速武器。"},
-{name:"ハンマー",type:"近接武器",desc:"頭を狙ってスタン。"},
-{name:"狩猟笛",type:"近接武器",desc:"旋律で強化。"},
-{name:"ランス",type:"近接武器",desc:"鉄壁ガード。"},
-{name:"ガンランス",type:"近接武器",desc:"砲撃で爆発。"},
-{name:"スラッシュアックス",type:"近接武器",desc:"変形武器。"},
-{name:"チャージアックス",type:"近接武器",desc:"超出力が魅力。"},
-{name:"操虫棍",type:"近接武器",desc:"空中戦武器。"},
-{name:"ライトボウガン",type:"遠距離武器",desc:"機動力の高い射撃武器。"},
-{name:"ヘビィボウガン",type:"遠距離武器",desc:"高火力重火器。"},
-{name:"弓",type:"遠距離武器",desc:"スタミナ管理が重要。"}
+"大剣","太刀","片手剣","双剣",
+"ハンマー","狩猟笛","ランス","ガンランス",
+"スラッシュアックス","チャージアックス","操虫棍",
+"ライトボウガン","ヘビィボウガン","弓"
+
 ]
 
-/* =========================
+let stats=JSON.parse(localStorage.getItem("stats"))||{}
+let results=JSON.parse(localStorage.getItem("quest"))||{win:0,lose:0}
+
+const favoriteSelect=document.getElementById("favorite")
+const banList=document.getElementById("banList")
+
+/* ======================
+   UI生成
+====================== */
+
+weapons.forEach(w=>{
+
+    let opt=document.createElement("option")
+    opt.value=w
+    opt.textContent=w
+    favoriteSelect.appendChild(opt)
+
+    let label=document.createElement("label")
+
+    let box=document.createElement("input")
+    box.type="checkbox"
+    box.value=w
+
+    label.appendChild(box)
+    label.appendChild(document.createTextNode(" "+w))
+
+    banList.appendChild(label)
+
+})
+
+/* ======================
    ルーレット
-========================= */
+====================== */
 
 function spin(){
 
-    const btn=document.getElementById("spinBtn")
-    btn.disabled=true
+    let banned=[...document.querySelectorAll("#banList input:checked")]
+    .map(b=>b.value)
 
-    document.getElementById("luck").innerText=""
-    document.getElementById("type").innerText=""
-    document.getElementById("desc").innerText=""
+    let fav=favoriteSelect.value
 
-    const spinSE=document.getElementById("spinSE")
-    const hitSE=document.getElementById("hitSE")
-    const luckSE=document.getElementById("luckSE")
+    let pool=[]
 
-    let finalIndex=Math.floor(Math.random()*weapons.length)
-    let w=weapons[finalIndex]
+    weapons.forEach(w=>{
 
-    let i=0
-    let speed=40
+        if(banned.includes(w)) return
 
-    function roulette(){
+        let weight=1
 
-        let r=Math.floor(Math.random()*weapons.length)
-        document.getElementById("result").innerText=weapons[r].name
+        if(w===fav) weight=3
 
-        if(i%3===0){
-            spinSE.currentTime=0
-            spinSE.play().catch(()=>{})
+        for(let i=0;i<weight;i++){
+            pool.push(w)
         }
 
-        i++
-
-        if(i<20){
-
-            speed+=8
-            setTimeout(roulette,speed)
-
-        }else{
-
-            document.getElementById("result").innerText=w.name
-            document.getElementById("type").innerText="系統 : "+w.type
-            document.getElementById("desc").innerText=w.desc
-
-            let resElem=document.getElementById("result")
-            resElem.classList.remove("rare")
-
-            let isRare=false
-
-            if(w.name==="片手剣" && Math.random()<0.02){
-
-                resElem.classList.add("rare")
-                isRare=true
-
-                document.body.classList.add("flash")
-
-                setTimeout(()=>{
-                    document.body.classList.remove("flash")
-                },1800)
-
-            }
-
-            document.getElementById("luck").innerText="グッドラック！"
-
-            hitSE.currentTime=0
-            hitSE.play().catch(()=>{})
-
-            hitSE.onended=function(){
-
-                if(isRare){
-                    luckSE.currentTime=0
-                    luckSE.play().catch(()=>{})
-                }
-
-                let quest=" "+(new Date()).toLocaleString()
-
-                saveHistory(w.name+" ("+quest+")")
-                saveStats(w.name)
-
-                btn.disabled=false
-
-            }
-
-        }
-
-    }
-
-    roulette()
-
-}
-
-/* =========================
-   履歴
-========================= */
-
-function saveHistory(name){
-
-    let history=JSON.parse(localStorage.getItem("mh_history"))||[]
-
-    history.unshift(name)
-
-    localStorage.setItem("mh_history",JSON.stringify(history))
-
-    updateHistory()
-
-}
-
-function updateHistory(){
-
-    let history=JSON.parse(localStorage.getItem("mh_history"))||[]
-
-    let html=""
-
-    history.forEach((w,i)=>{
-        let number=history.length-i
-        html+="#"+number+" "+w+"<br>"
     })
 
-    document.getElementById("history").innerHTML=html
+    let result=pool[Math.floor(Math.random()*pool.length)]
+
+    document.getElementById("result").textContent=result
+
+    stats[result]=(stats[result]||0)+1
+
+    localStorage.setItem("stats",JSON.stringify(stats))
+
+    updateChart()
 
 }
 
-function clearHistory(){
+/* ======================
+   クエスト結果
+====================== */
 
-    localStorage.removeItem("mh_history")
-    localStorage.removeItem("mh_stats")
+function recordWin(){
 
-    updateHistory()
+    results.win++
+    saveResult()
+
+}
+
+function recordLose(){
+
+    results.lose++
+    saveResult()
+
+}
+
+function saveResult(){
+
+    localStorage.setItem("quest",JSON.stringify(results))
     updateStats()
 
 }
 
-/* =========================
-   統計
-========================= */
-
-let chart
-let doughnut
-
-function saveStats(name){
-
-    let stats=JSON.parse(localStorage.getItem("mh_stats"))||{}
-
-    if(!stats[name]) stats[name]=0
-
-    stats[name]++
-
-    localStorage.setItem("mh_stats",JSON.stringify(stats))
-
-    updateStats()
-
-}
+/* ======================
+   成功率表示
+====================== */
 
 function updateStats(){
 
-    let stats=JSON.parse(localStorage.getItem("mh_stats"))||{}
+    let total=results.win+results.lose
 
-    let labels=[]
-    let data=[]
-    let total=0
+    let rate=total
+        ?((results.win/total)*100).toFixed(1)
+        :0
 
-    for(let w in stats){
-
-        labels.push(w)
-        data.push(stats[w])
-        total+=stats[w]
-
-    }
-
-    const ctx=document.getElementById("statsChart")
-
-    if(chart) chart.destroy()
-
-    chart=new Chart(ctx,{
-        type:'bar',
-        data:{
-            labels:labels,
-            datasets:[{
-                label:'使用回数',
-                data:data,
-                backgroundColor:'#ff7a2f'
-            }]
-        },
-        options:{responsive:true}
-    })
-
-    const dctx=document.getElementById("statsDoughnut")
-
-    if(doughnut) doughnut.destroy()
-
-    doughnut=new Chart(dctx,{
-        type:'doughnut',
-        data:{
-            labels:labels,
-            datasets:[{
-                data:data,
-                backgroundColor:labels.map((_,i)=>`hsl(${i*25},80%,60%)`)
-            }]
-        }
-    })
-
-    let html="武器出現率:<br>"
-
-    for(let w in stats){
-
-        let percent=((stats[w]/total)*100).toFixed(1)
-
-        html+=w+" : "+stats[w]+"回 ("+percent+"%)<br>"
-
-    }
-
-    document.getElementById("statsPercent").innerHTML=html
-
-    let ranking=Object.entries(stats).sort((a,b)=>b[1]-a[1])
-
-    let rankHTML="<br>武器ランキング:<br>"
-
-    ranking.forEach((w,i)=>{
-        rankHTML+=(i+1)+"位 : "+w[0]+" ("+w[1]+"回)<br>"
-    })
-
-    document.getElementById("statsPercent").innerHTML+=rankHTML
+    document.getElementById("stats").innerHTML=
+    `
+    成功 ${results.win} / 失敗 ${results.lose}<br>
+    成功率 ${rate}%
+    `
 
 }
 
-/* =========================
-   初期読み込み
-========================= */
+/* ======================
+   グラフ
+====================== */
 
-updateHistory()
+let chart
+
+function updateChart(){
+
+    let labels=Object.keys(stats)
+    let data=Object.values(stats)
+
+    if(chart) chart.destroy()
+
+    chart=new Chart(
+        document.getElementById("chart"),
+        {
+            type:"bar",
+            data:{
+                labels:labels,
+                datasets:[
+                    {
+                        label:"使用回数",
+                        data:data
+                    }
+                ]
+            }
+        }
+    )
+
+}
+
+/* ======================
+   初期ロード
+====================== */
+
 updateStats()
+updateChart()
 
 </script>
 
